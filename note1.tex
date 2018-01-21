@@ -1,0 +1,116 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\author{KL}
+\begin{document}
+\title{Note on Machine Learning}
+\maketitle
+\section{Intro}
+The softmax function is given by
+\begin{align}
+	softmax(z)_i = \frac{e^{z_i}}{\sum_j e^{z_j}},
+\end{align}
+
+Consider a simple neural network with one hidden layer. The hidden layer is given by
+\begin{align}
+\mathbf{h} = \sigma( \mathbf{x}\mathbf{W}^{(1)} + \mathbf{b}^{(1)}),
+\end{align}
+where $\mathbf{x}$ is the input row-vector and $\sigma$ is the sigmoid function. The output row-vector is given by
+\begin{align}
+\hat{\mathbf{y}} = {\rm softmax}(\mathbf{h}\mathbf{W}^{(2)}+\mathbf{b}^{(2)}),
+\end{align}
+where $\mathbf{h}$ is the row-vector for the hidden units. The cost function for each data set is given by
+\begin{align}
+J^{(j)} = -\sum_{i} y_i \log \hat{y}_i,
+\end{align}
+where $j$ is the label for each data set.  Thus, the cost for $M$ data set is the average:
+\begin{align}
+J = \frac{1}{M}\sum_k J_k.
+\end{align}
+\section{Gradient and back-propagations}
+In the following, we first compute the gradient for each data set w.r.t. each parameters (e.g., $\mathbf{W}$). Then we extend the formula to compute the gradient for all data set by matching the dimensions. Let $\mathbf{z}^{(2)} = \mathbf{h}\mathbf{W}^{(2)}+\mathbf{b}^{(2)}$, where the components are given by
+\begin{align}
+z^{(2)}_i = h_j W^{(2)}_{ji} + b^{(2)}_i,
+\end{align}
+where $\mathbf{z}$, $\mathbf{h}$ and $\mathbf{b}$ are row-vectors of dimension $D_y$. For $M$ data sets, they are $M\times D_y$ matrices. The components  the gradient of $J$ w.r.t. $\mathbf{z}^{(2)}$ is
+\begin{align}
+\nabla_{\mathbf{z}^{(2)}} J = \hat{\mathbf{y}} - \mathbf{y},
+\end{align}
+which is a row-vector of dimension $D_y$. For $M$ data sets, it is a $M\times D_y$ matrix. The gradient of $J$ w.r.t. $\mathbf{b}^{(2)}$ (a row-vector) is
+\begin{align}
+\frac{\partial J}{\partial b^{(2)}_i} &= \frac{\partial J}{\partial z^{(2)}_j}\frac{\partial z^{(2)}_j}{\partial b^{(2)}_i} \\
+&= (\hat{\mathbf{y}} - \mathbf{y})_j \delta_{ij} \\
+&= (\hat{\mathbf{y}} - \mathbf{y})_i.
+\end{align}
+So if there is $M$ data set, the above gradient has $M$ rows. The gradient of $J$ w.r.t. $\mathbf{W}^{(2)}$, which is a $H\times D_y$ matrix, is given by
+\begin{align}
+\frac{\partial J}{\partial W^{(2)}_{ij}} &= \frac{\partial J}{\partial z^{(2)}_j}\frac{\partial z^{(2)}_j}{\partial W^{(2)}_{ij}} \\
+&= h^T_i (\hat{\mathbf{y}} - \mathbf{y})_j,
+\end{align}
+where the gradient $\partial z_j/\partial W^{(2)}_{ij}$ is given by the following row-vector
+\begin{align}
+\frac{\partial z^{(2)}_j}{\partial W^{(2)}_{ij}} = h_i.
+\end{align}
+For $M$ data sets, $h_i$ is a $M \times H$ matrix. Thus, the transpose is required in Equation (12). The gradient of $J$ w.r.t. $h$ (a row-vector or $M \times H$ matrix) is
+\begin{align}
+\frac{\partial J}{\partial h_i} &= \frac{\partial J}{\partial z^{(2)}_j}\frac{\partial z^{(2)}_j}{\partial h_i} \\
+&= (\hat{\mathbf{y}} - \mathbf{y})_j (W^{(2)}_{ji})^T
+\end{align}
+where $\mathbf{W}^{(2)}$ is a $H \times D_y$ matrix. The gradient of $J$ w.r.t. $\mathbf{b}^{(1)}$ (a row-vector) for a \emph{single} data set is
+\begin{align}
+\frac{\partial J}{\partial b_i^{(1)}} &= \frac{\partial J}{\partial h_j} \frac{\partial h_j}{\partial  b_i^{(1)}}\\
+&= (\hat{\mathbf{y}} - \mathbf{y})_j (W^{(2)}_{ji})^T (\sigma'_i),
+\end{align}
+where the index $i$ is not summed. Thus, the above gradient is a row-vector of dimension $H$. For $M$ data set, $\partial h_j/\partial b_i$ is a $M \times H$ matrix. Thus, Equation (16) is an element-wise multiplication. The gradient for $M$ data set is obtained by averaging the first axis. Finally, the gradient w.r.t. $\mathbf{W}^{(1)}$ (a $D_x \times H$ matrix) is given by
+\begin{align}
+\frac{\partial J}{\partial W^{(1)}_{ij}} &= \frac{\partial J}{\partial h_j} \frac{\partial h_j}{\partial  W^{(1)}_{ij}}\\
+&= (\hat{\mathbf{y}} - \mathbf{y})_j (W^{(2)}_{ji})^T x_i,
+\end{align}
+where $x_i$ is a row-vector or $M \times D_x$
+
+\pagebreak
+\section{Note on Word2vec}
+
+There are two matrices: $\mathcal{V}$ and  $\mathcal{U}$
+
+\subsection{Skip-gram model}
+
+It uses a center word to predict or generate a set of $2m$ context words. There are $V$ words in the vocabulary and $n$ units in the hidden layer.
+
+\begin{enumerate}
+	\item[1.] input vector is a one-hot vector ($V$-dim): $\mathbf{x}$ for $word_c$ ($w_c$), where $c$ means ``center" and is not necessarily the index in the vocabulary of size $V$.
+	\item[2.] get the embedded word vector ($n$-dim) for the word $c$: $\mathbf{v}_c = \mathbf{x}^T \mathcal{V}$, i.e.
+	\begin{align}
+	v^{(c)}_j = \sum^V_{i=1} x_i \mathcal{V}_{i, j},
+	\end{align}
+	where $\mathcal{V}_{i, j}$ is the component of $\mathcal{V}$ ($V\times n$-dim). Note that $\mathbf{v}_c$ is not an one-hot vector.
+	\item[3.] Since there is only one input layer from the single center word, the hidden layer is simply $\mathbf{\hat{v}} = \mathbf{v}_c$ ($n$-dim).
+	\item[4.] The score vector can be generated by
+	\begin{align}
+	\mathbf{z} = \mathcal{U}\mathbf{\hat{v}},
+	\end{align}
+	where $\mathcal{U}$ is a $V \times n$ matrix. Note that $\mathbf{z}$ is $V$-dim vector. That is, each component, say $z_j$ represents the score of a context word $word_j$ given a center word $word_c$. Recall that, each row of $\mathcal{U}$ is basically an output embedded-word vector, i.e.,
+	\begin{align}
+	\mathbf{u}_j^T = \mathcal{U}_{(j,\cdot)},
+	\end{align}
+	where $\mathbf{u}_j$ is a ($n$-dim) vector for $word_j$.
+	\item[5.] The probability of a context word $word_j$ given a center word $word_c$ can be obtained by the softmax function of the score:
+	\begin{align}
+	\hat{y}_j = \frac{e^{z_j}}{\sum^V_{k=1} e^{z_k} }.
+	\end{align}
+	\item[6.] In computing the cost function, we simply multiply the probability of each context words, i.e., we assume these context words are independent. There are some deeper implications to this, but we do not go into details here. The cost function can be written as
+	\begin{align}
+	J &= -\log P(w_{c-m},w_{c-m+1},\cdots,w_{c-1},w_{c+1},\cdots,w_{c+m} | w_c) \\
+	&= - \log \prod_{j=-m,j\neq 0}^{m} P(w_{c+j}| w_c) \\
+	&= -\sum^m_{j=-m,j\neq 0} \log \left(\frac{\exp{z_j}}{\sum_k^V \exp{z_k}}\right) \\
+	&= -\sum^m_{j=-m,j\neq 0} z_j + \sum^m_{j=-m,j\neq 0}\log \left(\sum_k^V \exp{z_k}\right) \\
+	&= -\sum^m_{j=-m,j\neq 0} \mathbf{u}_{c+j}^T \mathbf{\hat{v}} + 2m \log \left(\sum_k^V \exp{z_k}\right)
+	\end{align}
+	Since there are $2m$ context words, i.e., $y_{c-m}$, $y_{c-m+1}$, ..., $y_{c+m}$. Only the $2m$ components of $\mathbf{z}$ is relevant in computing the cost function. That is, we can ``extract" the relevant columns using step (5) above to get $\mathbf{u}_{c+j}$.
+\end{enumerate}
+
+
+\end{document}
